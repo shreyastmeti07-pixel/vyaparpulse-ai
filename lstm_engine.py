@@ -4,22 +4,19 @@ import torch
 import torch.nn as nn
 from sklearn.preprocessing import MinMaxScaler
 
+torch.set_num_threads(1)
+
 
 class SalesLSTMModel(nn.Module):
-    def __init__(self, input_size: int = 1, hidden_size: int = 32, num_layers: int = 2):
+    def __init__(self, input_size: int = 1, hidden_size: int = 16, num_layers: int = 1):
         super().__init__()
         self.lstm = nn.LSTM(
             input_size=input_size,
             hidden_size=hidden_size,
             num_layers=num_layers,
             batch_first=True,
-            dropout=0.1,
         )
-        self.fc = nn.Sequential(
-            nn.Linear(hidden_size, 16),
-            nn.ReLU(),
-            nn.Linear(16, 1),
-        )
+        self.fc = nn.Linear(hidden_size, 1)
 
     def forward(self, x):
         out, _ = self.lstm(x)
@@ -58,12 +55,12 @@ class FastLSTMForecaster:
                 scaled_data = scaler.fit_transform(raw)
 
                 X_train, y_train = self._create_sequences(scaled_data)
-                model = SalesLSTMModel(hidden_size=32, num_layers=2)
+                model = SalesLSTMModel(hidden_size=16, num_layers=1)
                 criterion = nn.MSELoss()
-                optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+                optimizer = torch.optim.Adam(model.parameters(), lr=0.03)
 
                 model.train()
-                for _ in range(50):
+                for _ in range(15):
                     optimizer.zero_grad()
                     loss = criterion(model(X_train), y_train)
                     loss.backward()
