@@ -469,7 +469,9 @@
       const data = await res.json();
       if (!res.ok) return alert(data.detail);
       document.getElementById("otpVerifyBox").classList.remove("hidden");
-      document.getElementById("demoOtpHint").innerText = `SMS Sent to +91 ${mobile} • Demo OTP: ${data.demo_otp}`;
+      document.getElementById("demoOtpHint").innerText = data.sms_delivered
+  ? `Real OTP SMS sent to +91 ${mobile}. Check your phone inbox.`
+  : `SMS Gateway Fallback • Demo OTP: ${data.demo_otp}`;
     }
 
     async function confirmOTP() {
