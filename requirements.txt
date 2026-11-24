@@ -4,5 +4,6 @@ sqlalchemy
 pydantic[email]
 numpy
 scikit-learn
+requests
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch
