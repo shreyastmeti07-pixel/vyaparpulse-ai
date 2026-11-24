@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic[email]
+numpy
+scikit-learn
+torch
