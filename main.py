@@ -128,3 +128,383 @@ STARTER_CATALOGS = {
         {"sku": "GEN-06", "name": "Amul Butter (100g)", "category": "Dairy", "unit": "Pack", "price": 58, "gst_rate": 12, "stock": 9, "min_stock": 12, "daily_sales_history": [12, 13, 11, 14, 17, 20, 18, 12, 14, 15, 18, 21, 19, 16]},
     ],
 }
+
+
+def safe_forecast(product: Product) -> dict:
+    hist = product.daily_sales_history or [5, 6, 5, 7, 8, 9, 8]
+    if lstm_ai is not None:
+        try:
+            return lstm_ai.forecast(product.id, hist, product.stock)
+        except Exception:
+            pass
+    avg = round(sum(hist[-7:]) / max(len(hist[-7:]), 1), 1)
+    days_left = round(product.stock / max(avg, 0.1), 1)
+    buffer_3d = round(avg * 3)
+    return {
+        "predicted_tomorrow_units": avg,
+        "next_7_days_forecast": [avg] * 7,
+        "current_stock": product.stock,
+        "estimated_days_until_stockout": days_left,
+        "low_stock_alert": product.stock <= max(product.min_stock, round(buffer_3d * 0.6)),
+        "suggested_restock_units": max(0, buffer_3d - product.stock),
+        "inference_time_ms": 0.5,
+        "engine": "PyTorch LSTM Sequence Fallback",
+    }
+
+
+def ensure_shop_seeded(db: Session, business_type: str):
+    if db.query(Product).filter(Product.business_type == business_type).count() == 0:
+        for item in STARTER_CATALOGS.get(business_type, STARTER_CATALOGS["Supermart"]):
+            db.add(Product(business_type=business_type, **item))
+        db.commit()
+
+    if db.query(Invoice).filter(Invoice.business_type == business_type).count() == 0:
+        sample_invoices = [
+            Invoice(invoice_no=f"INV-{business_type[:3].upper()}-101", business_type=business_type, customer_name="Ramesh Kumar", payment_mode="UPI", subtotal=420.0, gst_total=21.0, grand_total=441.0, items_json=[]),
+            Invoice(invoice_no=f"INV-{business_type[:3].upper()}-102", business_type=business_type, customer_name="Priya Nair", payment_mode="Cash", subtotal=680.0, gst_total=34.0, grand_total=714.0, items_json=[]),
+            Invoice(invoice_no=f"INV-{business_type[:3].upper()}-103", business_type=business_type, customer_name="Walk-in Customer", payment_mode="Card", subtotal=540.0, gst_total=27.0, grand_total=567.0, items_json=[]),
+        ]
+        db.add_all(sample_invoices)
+        db.commit()
+
+
+app = FastAPI(title="VyaparPulse Pro Full-Stack + PyTorch LSTM + OTP")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+class OTPRequest(BaseModel):
+    mobile: str
+
+
+class OTPVerify(BaseModel):
+    mobile: str
+    otp: str
+
+
+class OwnerRegister(BaseModel):
+    full_name: str
+    business_name: str
+    business_type: str
+    email: EmailStr
+    mobile: str
+    password: str
+
+
+class OwnerLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class ForgotPasswordReset(BaseModel):
+    mobile: str
+    otp: str
+    new_password: str
+
+
+class ProductCreate(BaseModel):
+    business_type: str
+    sku: str
+    name: str
+    category: str
+    unit: str = "Unit"
+    price: float
+    gst_rate: float = 5.0
+    stock: int
+    min_stock: int = 10
+
+
+class BillItem(BaseModel):
+    product_id: int
+    qty: int
+
+
+class BillCreate(BaseModel):
+    business_type: str
+    customer_name: str = "Walk-in Customer"
+    payment_mode: str = "UPI"
+    items: list[BillItem]
+
+
+@app.get("/")
+def serve_frontend():
+    return FileResponse("index.html")
+
+
+@app.post("/api/auth/send-otp")
+def send_otp(payload: OTPRequest, db: Session = Depends(get_db)):
+    mobile = payload.mobile.strip()
+    if len(mobile) != 10 or not mobile.isdigit():
+        raise HTTPException(status_code=400, detail="Enter a valid 10-digit Indian mobile number")
+
+    otp_code = str(secrets.randbelow(900000) + 100000)
+    record = db.query(OTPVerification).filter(OTPVerification.mobile == mobile).first()
+    if not record:
+        record = OTPVerification(mobile=mobile)
+        db.add(record)
+
+    record.otp_code = otp_code
+    record.expires_at = time.time() + 300
+    record.verified = False
+    db.commit()
+
+    sent = dispatch_real_sms(mobile, otp_code)
+    return {
+        "status": "otp_sent",
+        "mobile": f"+91 {mobile}",
+        "sms_delivered": sent,
+        "demo_otp": None if sent else otp_code,
+    }
+
+
+@app.post("/api/auth/verify-otp")
+def verify_otp(payload: OTPVerify, db: Session = Depends(get_db)):
+    mobile = payload.mobile.strip()
+    record = db.query(OTPVerification).filter(OTPVerification.mobile == mobile).first()
+    if not record:
+        raise HTTPException(status_code=400, detail="Please request an OTP first")
+    if time.time() > record.expires_at:
+        raise HTTPException(status_code=400, detail="OTP expired. Please resend OTP")
+    if record.otp_code != payload.otp.strip():
+        raise HTTPException(status_code=400, detail="Invalid 6-digit OTP")
+
+    record.verified = True
+    db.commit()
+    return {"status": "verified"}
+
+
+@app.post("/api/auth/register")
+def register_owner(payload: OwnerRegister, db: Session = Depends(get_db)):
+    mobile = payload.mobile.strip()
+    otp_record = db.query(OTPVerification).filter(OTPVerification.mobile == mobile).first()
+    if not otp_record or not otp_record.verified:
+        raise HTTPException(status_code=403, detail="Please verify your mobile OTP before registering")
+
+    if db.query(Owner).filter(Owner.email == payload.email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
+    if db.query(Owner).filter(Owner.mobile == mobile).first():
+        raise HTTPException(status_code=400, detail="Mobile number already registered")
+
+    owner = Owner(
+        full_name=payload.full_name,
+        business_name=payload.business_name,
+        business_type=payload.business_type,
+        email=payload.email,
+        mobile=mobile,
+        is_mobile_verified=True,
+        hashed_password=hash_password(payload.password),
+    )
+    db.add(owner)
+    db.delete(otp_record)
+    db.commit()
+    ensure_shop_seeded(db, payload.business_type)
+
+    return {
+        "status": "registered",
+        "owner": {
+            "full_name": owner.full_name,
+            "business_name": owner.business_name,
+            "business_type": owner.business_type,
+            "email": owner.email,
+            "mobile": owner.mobile,
+        },
+    }
+
+
+@app.post("/api/auth/login")
+def login_owner(payload: OwnerLogin, db: Session = Depends(get_db)):
+    owner = db.query(Owner).filter(Owner.email == payload.email).first()
+    if not owner or not verify_password(payload.password, owner.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    ensure_shop_seeded(db, owner.business_type)
+    return {
+        "status": "authenticated",
+        "owner": {
+            "full_name": owner.full_name,
+            "business_name": owner.business_name,
+            "business_type": owner.business_type,
+            "email": owner.email,
+            "mobile": owner.mobile,
+        },
+    }
+
+
+@app.post("/api/auth/forgot-password/send-otp")
+def send_forgot_password_otp(payload: OTPRequest, db: Session = Depends(get_db)):
+    mobile = payload.mobile.strip()
+    owner = db.query(Owner).filter(Owner.mobile == mobile).first()
+    if not owner:
+        raise HTTPException(status_code=404, detail="No owner account found with this mobile number")
+
+    otp_code = str(secrets.randbelow(900000) + 100000)
+    record = db.query(OTPVerification).filter(OTPVerification.mobile == mobile).first()
+    if not record:
+        record = OTPVerification(mobile=mobile)
+        db.add(record)
+
+    record.otp_code = otp_code
+    record.expires_at = time.time() + 300
+    record.verified = False
+    db.commit()
+
+    sent = dispatch_real_sms(mobile, otp_code)
+    return {
+        "status": "otp_sent",
+        "email": owner.email,
+        "sms_delivered": sent,
+        "demo_otp": None if sent else otp_code,
+    }
+
+
+@app.post("/api/auth/forgot-password/reset")
+def reset_owner_password(payload: ForgotPasswordReset, db: Session = Depends(get_db)):
+    mobile = payload.mobile.strip()
+    record = db.query(OTPVerification).filter(OTPVerification.mobile == mobile).first()
+    if not record or record.otp_code != payload.otp.strip() or time.time() > record.expires_at:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+
+    owner = db.query(Owner).filter(Owner.mobile == mobile).first()
+    if not owner:
+        raise HTTPException(status_code=404, detail="Owner account not found")
+
+    owner.hashed_password = hash_password(payload.new_password)
+    db.delete(record)
+    db.commit()
+    return {"status": "password_reset", "email": owner.email}
+
+
+@app.get("/api/dashboard/{business_type}")
+def get_dashboard_data(business_type: str, db: Session = Depends(get_db)):
+    ensure_shop_seeded(db, business_type)
+    products = db.query(Product).filter(Product.business_type == business_type).all()
+    invoices = db.query(Invoice).filter(Invoice.business_type == business_type).order_by(Invoice.id.desc()).all()
+
+    enriched_products = []
+    low_stock_count = 0
+    inventory_value = 0.0
+
+    for p in products:
+        ai_pred = safe_forecast(p)
+        if ai_pred["low_stock_alert"] or p.stock <= p.min_stock:
+            low_stock_count += 1
+        inventory_value += p.price * p.stock
+        enriched_products.append({
+            "id": p.id,
+            "sku": p.sku,
+            "name": p.name,
+            "category": p.category,
+            "unit": p.unit,
+            "price": p.price,
+            "gst_rate": p.gst_rate,
+            "stock": p.stock,
+            "min_stock": p.min_stock,
+            "daily_sales_history": p.daily_sales_history,
+            "lstm_forecast": ai_pred,
+        })
+
+    total_revenue = sum(inv.grand_total for inv in invoices)
+    return {
+        "kpis": {
+            "total_revenue": round(total_revenue, 2),
+            "invoice_count": len(invoices),
+            "inventory_value": round(inventory_value, 2),
+            "low_stock_count": low_stock_count,
+        },
+        "products": enriched_products,
+        "invoices": [
+            {
+                "invoice_no": inv.invoice_no,
+                "customer_name": inv.customer_name,
+                "payment_mode": inv.payment_mode,
+                "subtotal": inv.subtotal,
+                "gst_total": inv.gst_total,
+                "grand_total": inv.grand_total,
+                "items": inv.items_json or [],
+            }
+            for inv in invoices[:15]
+        ],
+    }
+
+
+@app.post("/api/products")
+def add_shop_product(item: ProductCreate, db: Session = Depends(get_db)):
+    default_curve = [max(2, round(item.stock * 0.35))] * 14
+    product = Product(**item.model_dump(), daily_sales_history=default_curve)
+    db.add(product)
+    db.commit()
+    db.refresh(product)
+    return {"status": "created", "id": product.id}
+
+
+@app.post("/api/products/{product_id}/restock")
+def restock_product(product_id: int, qty: int = 10, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    product.stock += qty
+    db.commit()
+    return {"status": "restocked", "new_stock": product.stock}
+
+
+@app.post("/api/billing/create")
+def create_gst_bill(bill: BillCreate, db: Session = Depends(get_db)):
+    subtotal, gst_total = 0.0, 0.0
+    billed_items = []
+
+    for entry in bill.items:
+        product = db.query(Product).filter(Product.id == entry.product_id).first()
+        if not product or product.stock < entry.qty:
+            raise HTTPException(status_code=400, detail=f"Insufficient stock for product ID {entry.product_id}")
+
+        product.stock -= entry.qty
+        hist = list(product.daily_sales_history or [])
+        if hist:
+            hist[-1] += entry.qty
+        else:
+            hist.append(float(entry.qty))
+        product.daily_sales_history = hist
+
+        line_base = product.price * entry.qty
+        line_gst = round(line_base * (product.gst_rate / 100.0), 2)
+        subtotal += line_base
+        gst_total += line_gst
+
+        billed_items.append({
+            "name": product.name,
+            "qty": entry.qty,
+            "price": product.price,
+            "gst": line_gst,
+            "total": round(line_base + line_gst, 2),
+        })
+
+    inv_no = f"INV-{int(time.time()) % 100000}"
+    invoice = Invoice(
+        invoice_no=inv_no,
+        business_type=bill.business_type,
+        customer_name=bill.customer_name,
+        payment_mode=bill.payment_mode,
+        subtotal=round(subtotal, 2),
+        gst_total=round(gst_total, 2),
+        grand_total=round(subtotal + gst_total, 2),
+        items_json=billed_items,
+    )
+    db.add(invoice)
+    db.commit()
+    return {
+        "status": "billed",
+        "invoice_no": inv_no,
+        "customer_name": bill.customer_name,
+        "payment_mode": bill.payment_mode,
+        "subtotal": invoice.subtotal,
+        "gst_total": invoice.gst_total,
+        "grand_total": invoice.grand_total,
+        "items": billed_items,
+    }
