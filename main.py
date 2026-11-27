@@ -130,6 +130,15 @@ STARTER_CATALOGS = {
 }
 
 
+def normalize_business_type(btype: str) -> str:
+    b = (btype or "").strip().lower()
+    if "hotel" in b or "cafe" in b or "restaurant" in b:
+        return "Hotel"
+    if "general" in b or "kirana" in b:
+        return "General Store"
+    return "Supermart"
+
+
 def safe_forecast(product: Product) -> dict:
     hist = product.daily_sales_history or [5, 6, 5, 7, 8, 9, 8]
     if lstm_ai is not None:
@@ -153,22 +162,24 @@ def safe_forecast(product: Product) -> dict:
 
 
 def ensure_shop_seeded(db: Session, business_type: str):
+    canonical = normalize_business_type(business_type)
     if db.query(Product).filter(Product.business_type == business_type).count() == 0:
-        for item in STARTER_CATALOGS.get(business_type, STARTER_CATALOGS["Supermart"]):
+        for item in STARTER_CATALOGS.get(canonical, STARTER_CATALOGS["Supermart"]):
             db.add(Product(business_type=business_type, **item))
         db.commit()
 
     if db.query(Invoice).filter(Invoice.business_type == business_type).count() == 0:
+        prefix = canonical[:3].upper()
         sample_invoices = [
-            Invoice(invoice_no=f"INV-{business_type[:3].upper()}-101", business_type=business_type, customer_name="Ramesh Kumar", payment_mode="UPI", subtotal=420.0, gst_total=21.0, grand_total=441.0, items_json=[]),
-            Invoice(invoice_no=f"INV-{business_type[:3].upper()}-102", business_type=business_type, customer_name="Priya Nair", payment_mode="Cash", subtotal=680.0, gst_total=34.0, grand_total=714.0, items_json=[]),
-            Invoice(invoice_no=f"INV-{business_type[:3].upper()}-103", business_type=business_type, customer_name="Walk-in Customer", payment_mode="Card", subtotal=540.0, gst_total=27.0, grand_total=567.0, items_json=[]),
+            Invoice(invoice_no=f"INV-{prefix}-101", business_type=business_type, customer_name="Ramesh Kumar", payment_mode="UPI", subtotal=420.0, gst_total=21.0, grand_total=441.0, items_json=[]),
+            Invoice(invoice_no=f"INV-{prefix}-102", business_type=business_type, customer_name="Priya Nair", payment_mode="Cash", subtotal=680.0, gst_total=34.0, grand_total=714.0, items_json=[]),
+            Invoice(invoice_no=f"INV-{prefix}-103", business_type=business_type, customer_name="Walk-in Customer", payment_mode="Card", subtotal=540.0, gst_total=27.0, grand_total=567.0, items_json=[]),
         ]
         db.add_all(sample_invoices)
         db.commit()
 
 
-app = FastAPI(title="VyaparPulse Pro Full-Stack + PyTorch LSTM + OTP")
+app = FastAPI(title="VyaparPulse Pro Full-Stack + PyTorch LSTM + Groq LLM + OTP")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
@@ -231,6 +242,11 @@ class BillCreate(BaseModel):
     customer_name: str = "Walk-in Customer"
     payment_mode: str = "UPI"
     items: list[BillItem]
+
+
+class AIChatRequest(BaseModel):
+    business_type: str
+    message: str
 
 
 @app.get("/")
@@ -381,7 +397,7 @@ def reset_owner_password(payload: ForgotPasswordReset, db: Session = Depends(get
     return {"status": "password_reset", "email": owner.email}
 
 
-@app.get("/api/dashboard/{business_type}")
+@app.get("/api/dashboard/{business_type:path}")
 def get_dashboard_data(business_type: str, db: Session = Depends(get_db)):
     ensure_shop_seeded(db, business_type)
     products = db.query(Product).filter(Product.business_type == business_type).all()
@@ -507,4 +523,77 @@ def create_gst_bill(bill: BillCreate, db: Session = Depends(get_db)):
         "gst_total": invoice.gst_total,
         "grand_total": invoice.grand_total,
         "items": billed_items,
+    }
+
+
+@app.post("/api/ai/chat")
+def ask_shop_llm(payload: AIChatRequest, db: Session = Depends(get_db)):
+    ensure_shop_seeded(db, payload.business_type)
+    products = db.query(Product).filter(Product.business_type == payload.business_type).all()
+    invoices = db.query(Invoice).filter(Invoice.business_type == payload.business_type).all()
+
+    total_rev = round(sum(inv.grand_total for inv in invoices), 2)
+    stock_lines = []
+    urgent_items = []
+
+    for p in products:
+        fc = safe_forecast(p)
+        line = (
+            f"- {p.name} ({p.sku}): Stock={p.stock} {p.unit}, Price=₹{p.price} (GST {p.gst_rate}%), "
+            f"LSTM Tomorrow={fc['predicted_tomorrow_units']}, Days Left={fc['estimated_days_until_stockout']}d, "
+            f"Suggested Restock=+{fc['suggested_restock_units']}"
+        )
+        stock_lines.append(line)
+        if fc["low_stock_alert"] or p.stock <= p.min_stock:
+            urgent_items.append(f"{p.name} (only {p.stock} left, order +{fc['suggested_restock_units']})")
+
+    shop_context = (
+        f"Business Category: {payload.business_type}\n"
+        f"Total Revenue: ₹{total_rev} across {len(invoices)} invoices\n"
+        f"Live Inventory & PyTorch LSTM Forecast:\n" + "\n".join(stock_lines)
+    )
+
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
+    if api_key:
+        try:
+            resp = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "llama-3.1-8b-instant",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are VyaparPulse Pro AI Copilot, a smart retail assistant for Indian shop owners and workers. "
+                                "Answer concisely in clear bullet points using ₹ (INR) and the live shop data below. "
+                                "Help with restocking decisions, GST billing rules, and daily sales insights.\n\n"
+                                + shop_context
+                            ),
+                        },
+                        {"role": "user", "content": payload.message},
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 350,
+                },
+                timeout=12,
+            )
+            if resp.status_code == 200:
+                reply = resp.json()["choices"][0]["message"]["content"].strip()
+                return {"reply": reply, "engine": "Groq Llama-3.1-8B LLM + PyTorch LSTM Context"}
+        except Exception:
+            pass
+
+    urgent_text = ", ".join(urgent_items) if urgent_items else "All items have healthy stock levels."
+    return {
+        "reply": (
+            f"Live {payload.business_type} Snapshot:\n"
+            f"• Total Revenue: ₹{total_rev} ({len(invoices)} GST invoices)\n"
+            f"• Priority Restock Alerts: {urgent_text}\n"
+            f"• Tip: Use Billing & POS Terminal to generate GST bills—stock and LSTM forecasts update automatically."
+        ),
+        "engine": "VyaparPulse Local AI Fallback",
     }
