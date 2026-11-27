@@ -3,793 +3,885 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VyaparPulse Pro — Digital Inventory, GST Billing & PyTorch LSTM System</title>
+  <title>VyaparPulse Pro — Digital Inventory, GST POS &amp; PyTorch LSTM + LLM</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { font-family: 'Inter', sans-serif; }
+    .glass-dark { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); }
+    .tab-active { background: #4f46e5; color: #ffffff; box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.45); }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-900 antialiased">
+<body class="bg-slate-950 text-slate-900 min-h-screen">
 
-  <!-- ==================== STAGE 1: OWNER ONBOARDING, OTP & FORGOT PASSWORD PORTAL ==================== -->
-  <div id="authScreen" class="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white flex items-center justify-center p-4">
-    <div class="max-w-5xl w-full grid lg:grid-cols-12 bg-slate-900/90 backdrop-blur border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+  <!-- ==================== AUTHENTICATION SCREEN ==================== -->
+  <div id="authScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900">
+    <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900">
       
-      <!-- Left Coordinator Blueprint & Starter Items Preview -->
-      <div class="lg:col-span-5 p-7 bg-gradient-to-b from-indigo-900/40 to-slate-950/90 border-r border-slate-800 flex flex-col justify-between">
+      <!-- Left Branding & Quick Demo -->
+      <div class="lg:col-span-5 p-8 bg-gradient-to-b from-indigo-950/90 to-slate-900 text-white flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800">
         <div>
-          <div class="flex items-center gap-2.5">
-            <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-extrabold text-lg shadow-lg shadow-indigo-600/30">VP</div>
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-11 h-11 rounded-2xl bg-indigo-600 flex items-center justify-center font-extrabold text-lg shadow-lg">VP</div>
             <div>
-              <h1 class="font-extrabold text-xl tracking-tight">VyaparPulse Pro</h1>
-              <span class="text-[11px] text-emerald-400 font-semibold">● FastAPI + PyTorch LSTM + SQLite Connected</span>
+              <h1 class="text-xl font-extrabold tracking-tight">VyaparPulse Pro</h1>
+              <p class="text-xs text-emerald-400 font-medium">● FastAPI + PyTorch LSTM + Groq LLM + SQLite</p>
             </div>
           </div>
-
-          <p class="text-xs text-slate-300 mt-4 leading-relaxed">
-            End-to-end Digital Inventory, GST POS Billing & Deep-Learning Demand Forecasting built for Indian small businesses.
+          <p class="text-sm text-slate-300 leading-relaxed mb-6">
+            End-to-end Digital Inventory, GST POS Billing &amp; Hybrid Deep-Learning + LLM Copilot built for Indian small businesses.
           </p>
 
-          <!-- Dynamic Starter Catalog Preview -->
-          <div class="mt-6 bg-slate-950/80 border border-slate-800 rounded-2xl p-4">
-            <div class="flex items-center justify-between mb-2.5">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Starter Items Auto-Loaded</span>
-              <span id="previewShopBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-semibold">Supermart</span>
+          <div class="rounded-2xl bg-slate-950/60 border border-slate-800 p-4 mb-6">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Starter Items Auto-Loaded</span>
+              <span id="previewBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-600/30 text-indigo-300 font-semibold">Supermart</span>
             </div>
-            <ul id="starterPreviewList" class="space-y-1.5 text-xs text-slate-300"></ul>
+            <ul id="starterPreviewList" class="text-xs text-slate-300 space-y-1.5">
+              <li>✓ Aashirvaad Atta (5kg) — ₹245</li>
+              <li>✓ Sunpure Sunflower Oil (1L) — ₹135</li>
+              <li>✓ Tata Salt (1kg) — ₹28</li>
+              <li>✓ Surf Excel Matic (2kg) — ₹390</li>
+              <li>✓ Sona Masoori Rice (10kg) — ₹560</li>
+            </ul>
           </div>
         </div>
 
-        <!-- 1-Click Coordinator Live Demo -->
-        <div class="mt-6 pt-5 border-t border-slate-800">
-          <div class="text-xs font-semibold text-slate-400 mb-2.5">1-Click Coordinator Live Demo (Instant Entry):</div>
+        <div>
+          <p class="text-xs text-slate-400 mb-2.5 font-medium">1-Click Coordinator Live Demo (Instant Entry):</p>
           <div class="grid grid-cols-3 gap-2">
-            <button onclick="quickDemo('Hotel')" class="bg-slate-800 hover:bg-indigo-600 border border-slate-700 py-2.5 rounded-xl text-xs font-bold transition">Hotel / Cafe</button>
-            <button onclick="quickDemo('Supermart')" class="bg-slate-800 hover:bg-indigo-600 border border-slate-700 py-2.5 rounded-xl text-xs font-bold transition">Supermart</button>
-            <button onclick="quickDemo('General Store')" class="bg-slate-800 hover:bg-indigo-600 border border-slate-700 py-2.5 rounded-xl text-xs font-bold transition">General Store</button>
+            <button onclick="quickDemoLogin('Hotel')" class="py-2 px-2 rounded-xl bg-slate-800 hover:bg-indigo-600 text-xs font-semibold transition">Hotel / Cafe</button>
+            <button onclick="quickDemoLogin('Supermart')" class="py-2 px-2 rounded-xl bg-slate-800 hover:bg-indigo-600 text-xs font-semibold transition">Supermart</button>
+            <button onclick="quickDemoLogin('General Store')" class="py-2 px-2 rounded-xl bg-slate-800 hover:bg-indigo-600 text-xs font-semibold transition">General Store</button>
           </div>
         </div>
       </div>
 
-      <!-- Right Owner Registration (with OTP), Sign-In & Forgot Password -->
-      <div class="lg:col-span-7 p-7 md:p-9 bg-slate-900">
-        <div class="flex gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 mb-6">
-          <button id="tabRegister" onclick="switchAuthTab('register')" class="flex-1 py-2.5 text-xs font-bold rounded-lg bg-indigo-600 text-white transition">
-            Create Owner Account (OTP)
-          </button>
-          <button id="tabLogin" onclick="switchAuthTab('login')" class="flex-1 py-2.5 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">
-            Owner Sign In
-          </button>
+      <!-- Right Auth Forms -->
+      <div class="lg:col-span-7 p-8 bg-slate-900 text-white">
+        <div class="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-950 border border-slate-800 mb-6">
+          <button id="tabRegisterBtn" onclick="switchAuthTab('register')" class="py-2.5 rounded-xl text-sm font-bold bg-indigo-600 text-white transition">Create Owner Account (OTP)</button>
+          <button id="tabLoginBtn" onclick="switchAuthTab('login')" class="py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:text-white transition">Owner Sign In</button>
         </div>
 
         <!-- REGISTER FORM -->
-        <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4">
-          <div class="grid sm:grid-cols-2 gap-3.5">
+        <div id="registerFormBox" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="text-xs font-semibold text-slate-400">Owner Full Name</label>
-              <input id="regName" required placeholder="e.g. Shreyas T Meti" class="w-full mt-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 outline-none rounded-xl px-3.5 py-2.5 text-sm" />
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Owner Full Name</label>
+              <input id="regName" type="text" placeholder="Shreyas T Meti" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:border-indigo-500 outline-none" />
             </div>
             <div>
-              <label class="text-xs font-semibold text-slate-400">Shop / Business Name</label>
-              <input id="regBizName" required placeholder="e.g. Sri Annapurna Mart" class="w-full mt-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 outline-none rounded-xl px-3.5 py-2.5 text-sm" />
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Shop / Business Name</label>
+              <input id="regShopName" type="text" placeholder="Sri Lakshmi Supermart" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:border-indigo-500 outline-none" />
             </div>
           </div>
 
-          <div class="grid sm:grid-cols-2 gap-3.5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="text-xs font-semibold text-slate-400">Select Shop Type</label>
-              <select id="regShopType" onchange="updateStarterPreview(this.value)" class="w-full mt-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 outline-none rounded-xl px-3.5 py-2.5 text-sm">
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Select Shop Type</label>
+              <select id="regShopType" onchange="updateStarterPreview()" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:border-indigo-500 outline-none">
                 <option value="Supermart">Supermart / Grocery</option>
-                <option value="Hotel">Hotel / Restaurant</option>
-                <option value="General Store">General Store / Retail</option>
+                <option value="Hotel">Hotel / Cafe / Restaurant</option>
+                <option value="General Store">General Store / Kirana</option>
               </select>
             </div>
             <div>
-              <label class="text-xs font-semibold text-slate-400">Owner Email ID</label>
-              <input id="regEmail" type="email" required placeholder="owner@business.in" class="w-full mt-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 outline-none rounded-xl px-3.5 py-2.5 text-sm" />
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Owner Email ID</label>
+              <input id="regEmail" type="email" placeholder="owner@shop.in" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:border-indigo-500 outline-none" />
             </div>
           </div>
 
-          <!-- Mobile OTP Verification Card -->
-          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
+          <!-- Mobile OTP Box -->
+          <div class="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-300">Mobile Number Verification (+91)</span>
-              <span id="otpBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">OTP Required</span>
+              <span id="otpStatusBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold">OTP Required</span>
             </div>
             <div class="flex gap-2">
-              <input id="regMobile" maxlength="10" required placeholder="Enter 10-digit mobile number" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm" />
-              <button type="button" onclick="requestOTP()" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition">
-                Send OTP
-              </button>
+              <input id="regMobile" type="tel" maxlength="10" placeholder="10-digit Indian mobile number" class="flex-1 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white outline-none focus:border-indigo-500" />
+              <button onclick="sendOTP()" id="sendOtpBtn" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold whitespace-nowrap transition">Send OTP</button>
             </div>
-            <div id="otpVerifyBox" class="hidden space-y-2 pt-1">
-              <div id="demoOtpHint" class="text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-700/50 px-3 py-2 rounded-xl"></div>
-              <div class="flex gap-2">
-                <input id="regOtpInput" maxlength="6" placeholder="Enter 6-digit OTP" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm font-mono tracking-widest" />
-                <button type="button" onclick="confirmOTP()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-xs font-bold transition">
-                  Verify OTP
-                </button>
-              </div>
+            <p id="demoOtpHint" class="hidden text-xs px-3 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-medium"></p>
+            <div id="otpVerifyRow" class="hidden flex gap-2">
+              <input id="regOtpInput" type="text" maxlength="6" placeholder="Enter 6-digit OTP" class="flex-1 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white tracking-widest outline-none focus:border-emerald-500" />
+              <button onclick="verifyOTP()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold transition">Verify OTP</button>
             </div>
           </div>
 
           <div>
-            <label class="text-xs font-semibold text-slate-400">Create Account Password</label>
-            <input id="regPassword" type="password" required minlength="6" placeholder="Minimum 6 characters" class="w-full mt-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 outline-none rounded-xl px-3.5 py-2.5 text-sm" />
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Create Account Password</label>
+            <input id="regPassword" type="password" placeholder="Minimum 6 characters" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:border-indigo-500 outline-none" />
           </div>
 
-          <button type="submit" id="registerSubmitBtn" disabled class="w-full bg-indigo-600 disabled:bg-slate-800 disabled:text-slate-500 hover:bg-indigo-500 py-3 rounded-xl text-sm font-bold shadow-lg transition">
+          <p id="authErrorMsg" class="hidden text-xs text-rose-400 font-medium"></p>
+
+          <button id="createAccountBtn" onclick="registerOwner()" disabled class="w-full py-3 rounded-xl bg-slate-800 text-slate-500 font-bold text-sm cursor-not-allowed transition">
             Verify Mobile OTP to Create Account →
           </button>
-        </form>
+        </div>
 
         <!-- LOGIN FORM -->
-        <form id="loginForm" onsubmit="handleLogin(event)" class="hidden space-y-4">
+        <div id="loginFormBox" class="hidden space-y-4">
           <div>
-            <label class="text-xs font-semibold text-slate-400">Registered Email ID</label>
-            <input id="loginEmail" type="email" required placeholder="owner@business.in" class="w-full mt-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-3 text-sm" />
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Registered Owner Email</label>
+            <input id="loginEmail" type="email" placeholder="owner@shop.in" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:border-indigo-500 outline-none" />
           </div>
           <div>
-            <div class="flex justify-between items-center">
-              <label class="text-xs font-semibold text-slate-400">Password</label>
-              <button type="button" onclick="switchAuthTab('forgot')" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300">
-                Forgot Password?
-              </button>
-            </div>
-            <input id="loginPassword" type="password" required placeholder="••••••••" class="w-full mt-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-3 text-sm" />
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Password</label>
+            <input id="loginPassword" type="password" placeholder="Enter password" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:border-indigo-500 outline-none" />
           </div>
-          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl text-sm font-bold shadow-lg">
+          <p id="loginErrorMsg" class="hidden text-xs text-rose-400 font-medium"></p>
+          <button onclick="loginOwner()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition">
             Sign In to Executive Dashboard →
           </button>
-        </form>
-
-        <!-- FORGOT PASSWORD FORM (OTP RESET) -->
-        <form id="forgotForm" onsubmit="handleResetPassword(event)" class="hidden space-y-4">
-          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-200">Reset Password via Registered Mobile OTP</span>
-              <span class="text-[11px] text-indigo-400 font-semibold">2FA Recovery</span>
-            </div>
-            <div class="flex gap-2">
-              <input id="fpMobile" maxlength="10" required placeholder="Registered 10-digit Mobile" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm" />
-              <button type="button" onclick="requestForgotOTP()" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition">
-                Send Reset OTP
-              </button>
-            </div>
-            <div id="fpOtpBox" class="hidden space-y-2.5 pt-1">
-              <div id="fpDemoHint" class="text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-700/50 px-3 py-2 rounded-xl"></div>
-              <input id="fpOtpInput" maxlength="6" required placeholder="Enter 6-digit OTP" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm font-mono tracking-widest" />
-              <input id="fpNewPassword" type="password" minlength="6" required placeholder="Enter New Password (min 6 chars)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm" />
-            </div>
-          </div>
-
-          <button type="submit" id="fpSubmitBtn" disabled class="w-full bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-500 hover:bg-emerald-500 py-3 rounded-xl text-sm font-bold shadow-lg transition">
-            Reset Password & Sign In →
-          </button>
-          <button type="button" onclick="switchAuthTab('login')" class="w-full text-xs text-slate-400 hover:text-white py-1">
-            ← Back to Owner Sign In
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ==================== STAGE 2: EXECUTIVE WORKSPACE ==================== -->
-  <div id="dashboardScreen" class="hidden min-h-screen flex bg-slate-50">
+  <!-- ==================== MAIN DASHBOARD APP ==================== -->
+  <div id="appScreen" class="hidden min-h-screen flex bg-slate-100">
     
-    <!-- Left Sidebar Navigation -->
-    <aside class="w-64 bg-slate-900 text-slate-200 flex flex-col justify-between shrink-0">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-950 text-white flex flex-col justify-between p-5 shrink-0">
       <div>
-        <div class="p-5 border-b border-slate-800 flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center font-extrabold text-white">VP</div>
+        <div class="flex items-center gap-3 mb-8 px-1">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-extrabold">VP</div>
           <div>
-            <div class="font-bold text-sm text-white">VyaparPulse Pro</div>
-            <div class="text-[11px] text-emerald-400">● PyTorch LSTM Active</div>
+            <div class="font-bold text-base leading-tight">VyaparPulse Pro</div>
+            <div class="text-[11px] text-emerald-400 font-medium">● PyTorch LSTM + Groq LLM</div>
           </div>
         </div>
 
-        <nav class="p-3.5 space-y-1.5 text-xs font-semibold">
-          <button onclick="switchTab('overview')" id="nav-overview" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600 text-white">
+        <nav class="space-y-1.5">
+          <button onclick="switchMainView('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold tab-active transition">
             <span>📊</span> Executive Dashboard
           </button>
-          <button onclick="switchTab('pos')" id="nav-pos" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white">
-            <span>🧾</span> Billing & POS Terminal
+          <button onclick="switchMainView('pos')" id="nav-pos" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-900 hover:text-white transition">
+            <span>🧾</span> Billing &amp; POS Terminal
           </button>
-          <button onclick="switchTab('inventory')" id="nav-inventory" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white">
-            <span>📦</span> Inventory & LSTM AI
+          <button onclick="switchMainView('inventory')" id="nav-inventory" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-900 hover:text-white transition">
+            <span>📦</span> Inventory &amp; LSTM AI
           </button>
-          <button onclick="switchTab('reports')" id="nav-reports" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white">
-            <span>📈</span> Sales & GST Ledger
+          <button onclick="switchMainView('ledger')" id="nav-ledger" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-900 hover:text-white transition">
+            <span>📑</span> Sales &amp; GST Ledger
           </button>
         </nav>
       </div>
 
-      <div class="p-4 border-t border-slate-800 space-y-2.5">
-        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
-          <div id="sideBizName" class="font-bold text-white truncate">Business Name</div>
-          <div id="sideOwnerMeta" class="text-[11px] text-slate-400 mt-0.5 truncate">Owner • Verified ✓</div>
+      <div class="space-y-3">
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800">
+          <div id="sidebarShopName" class="text-xs font-bold text-white truncate">Demo Supermart</div>
+          <div id="sidebarOwnerMeta" class="text-[11px] text-slate-400 truncate mt-0.5">Owner • +91 Verified ✓</div>
         </div>
-        <button onclick="location.reload()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-rose-600 text-xs font-semibold transition">
+        <button onclick="logoutOwner()" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-rose-600/20 hover:text-rose-300 border border-slate-800 text-xs font-semibold text-slate-300 transition">
           Sign Out
         </button>
       </div>
     </aside>
 
     <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col min-w-0">
+    <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
+      
       <!-- Top Header -->
-      <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+      <header class="flex flex-wrap items-center justify-between gap-4 mb-7">
         <div>
           <div class="flex items-center gap-2.5">
-            <h2 id="pageTitle" class="text-lg font-extrabold text-slate-900">Executive Dashboard</h2>
-            <span id="hdrShopTypeBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Supermart</span>
+            <h2 id="viewTitle" class="text-2xl font-extrabold text-slate-900">Executive Dashboard</h2>
+            <span id="headerShopBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-indigo-100 text-indigo-700">Supermart</span>
           </div>
-          <p class="text-xs text-slate-500 mt-0.5">Real-time GST sales, inventory valuation & 7-day PyTorch LSTM demand intelligence</p>
+          <p class="text-xs text-slate-500 mt-1">Real-time GST sales, inventory valuation, 7-day PyTorch LSTM demand intelligence &amp; Groq LLM Copilot</p>
         </div>
 
         <div class="flex items-center gap-2.5">
-          <button onclick="openAddItemModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition">
-            + Add Item to Shop
-          </button>
-          <button onclick="switchTab('pos')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition">
-            + New GST Bill
-          </button>
-          <button onclick="toggleHelpChat()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition">
-            🤖 AI Worker Guide
+          <button onclick="openAddItemModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition">+ Add Item to Shop</button>
+          <button onclick="switchMainView('pos')" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition">+ New GST Bill</button>
+          <button onclick="openAICopilotModal()" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 transition">
+            <span>🤖</span> AI Copilot (LLM)
           </button>
         </div>
       </header>
 
-      <!-- TAB 1: EXECUTIVE DASHBOARD -->
-      <main id="tab-overview" class="p-6 space-y-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <!-- VIEW 1: EXECUTIVE DASHBOARD -->
+      <section id="view-dashboard" class="space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
             <div class="text-xs font-semibold text-slate-500">Total Billed Revenue</div>
-            <div id="kpiRevenue" class="text-2xl font-extrabold text-slate-900 mt-1.5">₹0</div>
+            <div id="kpiRevenue" class="text-2xl font-extrabold text-slate-900 mt-1">₹0</div>
             <div class="text-[11px] font-semibold text-emerald-600 mt-1">● Live SQLite Ledger Synced</div>
           </div>
-          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
             <div class="text-xs font-semibold text-slate-500">GST Invoices Generated</div>
-            <div id="kpiInvoices" class="text-2xl font-extrabold text-slate-900 mt-1.5">0</div>
+            <div id="kpiInvoices" class="text-2xl font-extrabold text-slate-900 mt-1">0</div>
             <div class="text-[11px] font-semibold text-indigo-600 mt-1">CGST + SGST Auto-Computed</div>
           </div>
-          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
             <div class="text-xs font-semibold text-slate-500">Shop Inventory Value</div>
-            <div id="kpiInvValue" class="text-2xl font-extrabold text-slate-900 mt-1.5">₹0</div>
-            <div id="kpiItemCount" class="text-[11px] font-semibold text-slate-500 mt-1">0 Active SKUs</div>
+            <div id="kpiInventoryVal" class="text-2xl font-extrabold text-slate-900 mt-1">₹0</div>
+            <div id="kpiSkuCount" class="text-[11px] font-medium text-slate-500 mt-1">0 Active SKUs</div>
           </div>
-          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
             <div class="text-xs font-semibold text-slate-500">LSTM Stockout Warnings</div>
-            <div id="kpiAlerts" class="text-2xl font-extrabold text-amber-600 mt-1.5">0</div>
+            <div id="kpiLowStock" class="text-2xl font-extrabold text-amber-600 mt-1">0</div>
             <div class="text-[11px] font-semibold text-amber-600 mt-1">7-Day Neural Sequence Watch</div>
           </div>
         </div>
 
-        <div class="grid lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <div class="mb-4">
-              <h3 class="font-bold text-sm text-slate-900">PyTorch LSTM: Actual Stock vs Predicted Tomorrow Demand</h3>
-              <p class="text-xs text-slate-500">Deep-learning forecast trained on 7-day rolling item sales sequences</p>
-            </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 class="text-base font-bold text-slate-900">PyTorch LSTM: Actual Stock vs Predicted Tomorrow Demand</h3>
+            <p class="text-xs text-slate-500 mb-4">Deep-learning forecast trained on 7-day rolling item sales sequences</p>
             <div class="h-64">
-              <canvas id="lstmDemandChart"></canvas>
+              <canvas id="lstmChart"></canvas>
             </div>
           </div>
 
-          <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between mb-3">
-                <h3 class="font-bold text-sm text-slate-900">Priority Restock Watch (LSTM AI)</h3>
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">Action Needed</span>
+                <h3 class="text-base font-bold text-slate-900">Priority Restock Watch (LSTM AI)</h3>
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">Action Needed</span>
               </div>
-              <div id="restockWatchList" class="space-y-2.5"></div>
+              <div id="priorityRestockList" class="space-y-2.5"></div>
             </div>
-            <button onclick="switchTab('inventory')" class="mt-4 w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700">
-              Open Full Inventory & Forecast Matrix →
+            <button onclick="switchMainView('inventory')" class="mt-4 w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition">
+              Open Full Inventory &amp; Forecast Matrix →
             </button>
           </div>
         </div>
 
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <h3 class="font-bold text-sm text-slate-900 mb-3">Recent GST Tax Invoices</h3>
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-base font-bold text-slate-900 mb-4">Recent GST Tax Invoices</h3>
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
-                <tr>
-                  <th class="py-2.5 px-3">Invoice No</th>
-                  <th class="py-2.5 px-3">Customer</th>
-                  <th class="py-2.5 px-3">Payment</th>
-                  <th class="py-2.5 px-3">Subtotal</th>
-                  <th class="py-2.5 px-3">GST</th>
-                  <th class="py-2.5 px-3 text-right">Grand Total</th>
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-[11px] uppercase text-slate-400 font-bold">
+                  <th class="py-2.5">Invoice No</th>
+                  <th class="py-2.5">Customer</th>
+                  <th class="py-2.5">Payment</th>
+                  <th class="py-2.5">Subtotal</th>
+                  <th class="py-2.5">GST</th>
+                  <th class="py-2.5 text-right">Grand Total</th>
                 </tr>
               </thead>
-              <tbody id="recentInvoicesBody" class="divide-y divide-slate-100"></tbody>
+              <tbody id="recentInvoicesBody" class="text-xs divide-y divide-slate-100"></tbody>
             </table>
           </div>
         </div>
-      </main>
+      </section>
 
-      <!-- TAB 2: BILLING & POS TERMINAL -->
-      <main id="tab-pos" class="hidden p-6 grid lg:grid-cols-12 gap-6">
-        <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <h3 class="font-bold text-sm mb-3">Select Shop Items to Bill</h3>
-          <div id="posProductGrid" class="grid sm:grid-cols-2 gap-3"></div>
+      <!-- VIEW 2: BILLING & POS TERMINAL -->
+      <section id="view-pos" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-base font-bold text-slate-900 mb-1">Select Shop Items to Bill</h3>
+          <p class="text-xs text-slate-500 mb-4">Click any item to add to cart; GST &amp; stock deduct automatically</p>
+          <div id="posProductGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
         </div>
 
-        <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+        <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
-            <h3 class="font-bold text-sm mb-3">Current GST Tax Invoice</h3>
-            <div class="grid grid-cols-2 gap-2.5 mb-3">
-              <input id="billCustomer" placeholder="Customer Name" class="border border-slate-300 rounded-xl px-3 py-2 text-xs" />
-              <select id="billPayMode" class="border border-slate-300 rounded-xl px-3 py-2 text-xs">
-                <option value="UPI">UPI / QR Scan</option>
+            <h3 class="text-base font-bold text-slate-900 mb-4">Current GST Tax Cart</h3>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <input id="posCustomer" type="text" value="Walk-in Customer" placeholder="Customer Name" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium" />
+              <select id="posPayment" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium">
+                <option value="UPI">UPI / QR</option>
                 <option value="Cash">Cash</option>
                 <option value="Card">Debit / Credit Card</option>
               </select>
             </div>
-            <div id="posCartList" class="space-y-2 max-h-64 overflow-y-auto border-t border-slate-100 pt-3 text-xs"></div>
+            <div id="posCartItems" class="space-y-2 max-h-64 overflow-y-auto border-y border-slate-100 py-3"></div>
           </div>
 
-          <div class="border-t border-slate-200 pt-4 mt-4 space-y-2 text-xs">
-            <div class="flex justify-between text-slate-500"><span>Taxable Subtotal:</span><span id="posSubtotal">₹0.00</span></div>
-            <div class="flex justify-between text-slate-500"><span>Total GST (CGST + SGST):</span><span id="posGst">₹0.00</span></div>
-            <div class="flex justify-between text-base font-extrabold text-slate-900 pt-1"><span>Grand Total:</span><span id="posGrandTotal" class="text-emerald-600">₹0.00</span></div>
-            <button onclick="submitGSTBill()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow">
-              Generate GST Invoice & Deduct Stock
+          <div class="pt-4 space-y-2 text-xs">
+            <div class="flex justify-between text-slate-500"><span>Taxable Subtotal</span><span id="cartSubtotal">₹0.00</span></div>
+            <div class="flex justify-between text-slate-500"><span>CGST + SGST</span><span id="cartGst">₹0.00</span></div>
+            <div class="flex justify-between text-base font-extrabold text-slate-900 pt-2 border-t border-slate-200">
+              <span>Grand Total</span><span id="cartGrandTotal">₹0.00</span>
+            </div>
+            <button onclick="checkoutBill()" class="w-full mt-3 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow transition">
+              Generate GST Invoice &amp; Update Stock →
             </button>
           </div>
         </div>
-      </main>
+      </section>
 
-      <!-- TAB 3: INVENTORY & PYTORCH LSTM FORECAST -->
-      <main id="tab-inventory" class="hidden p-6">
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h3 class="font-bold text-sm">Complete Shop Stock & PyTorch LSTM Neural Forecast</h3>
-              <p class="text-xs text-slate-500">Trained on 7-day rolling item sales sequences</p>
-            </div>
-            <button onclick="openAddItemModal()" class="bg-indigo-600 text-white text-xs font-bold px-3.5 py-2 rounded-xl">+ Add New Item</button>
+      <!-- VIEW 3: INVENTORY & LSTM AI -->
+      <section id="view-inventory" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Complete Shop Stock &amp; PyTorch LSTM Neural Forecast</h3>
+            <p class="text-xs text-slate-500">Trained on 7-day rolling item sales sequences</p>
           </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
-                <tr>
-                  <th class="py-2.5 px-3">SKU</th>
-                  <th class="py-2.5 px-3">Item Name</th>
-                  <th class="py-2.5 px-3">Price (GST)</th>
-                  <th class="py-2.5 px-3">Current Stock</th>
-                  <th class="py-2.5 px-3">LSTM Tomorrow</th>
-                  <th class="py-2.5 px-3">Stockout Countdown</th>
-                  <th class="py-2.5 px-3 text-right">Quick Restock</th>
-                </tr>
-              </thead>
-              <tbody id="fullInventoryBody" class="divide-y divide-slate-100"></tbody>
-            </table>
-          </div>
+          <button onclick="openAddItemModal()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold">+ Add New Item</button>
         </div>
-      </main>
 
-      <!-- TAB 4: SALES & GST LEDGER -->
-      <main id="tab-reports" class="hidden p-6">
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <h3 class="font-bold text-sm mb-3">All Recorded GST Invoices</h3>
-          <div id="allInvoicesContainer" class="space-y-2.5 text-xs"></div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 text-[11px] uppercase text-slate-400 font-bold">
+                <th class="py-3">SKU</th>
+                <th class="py-3">Item Name</th>
+                <th class="py-3">Price (GST)</th>
+                <th class="py-3">Current Stock</th>
+                <th class="py-3">LSTM Tomorrow</th>
+                <th class="py-3">Stockout Countdown</th>
+                <th class="py-3 text-right">Quick Restock</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryMatrixBody" class="text-xs divide-y divide-slate-100"></tbody>
+          </table>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <!-- VIEW 4: SALES & GST LEDGER -->
+      <section id="view-ledger" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <h3 class="text-base font-bold text-slate-900 mb-4">Full GST Tax Invoice Ledger</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 text-[11px] uppercase text-slate-400 font-bold">
+                <th class="py-3">Invoice No</th>
+                <th class="py-3">Customer</th>
+                <th class="py-3">Payment Mode</th>
+                <th class="py-3">Subtotal</th>
+                <th class="py-3">GST Tax</th>
+                <th class="py-3 text-right">Grand Total</th>
+              </tr>
+            </thead>
+            <tbody id="fullLedgerBody" class="text-xs divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <!-- Add Item Modal -->
-  <div id="addItemModal" class="hidden fixed inset-0 bg-slate-950/70 flex items-center justify-center p-4 z-50">
-    <form onsubmit="submitNewProduct(event)" class="bg-white rounded-2xl p-6 max-w-md w-full space-y-3.5 shadow-2xl">
-      <h3 class="font-extrabold text-base text-slate-900">Add New Item to Your Shop</h3>
-      <div class="grid grid-cols-2 gap-3">
-        <input id="newSku" required placeholder="SKU (e.g. SHP-10)" class="border border-slate-300 rounded-xl px-3 py-2 text-xs" />
-        <input id="newCategory" required placeholder="Category" class="border border-slate-300 rounded-xl px-3 py-2 text-xs" />
+  <!-- ==================== ADD ITEM MODAL ==================== -->
+  <div id="addItemModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-slate-900">Add New Item to Shop</h3>
+        <button onclick="closeAddItemModal()" class="text-slate-400 hover:text-slate-700 font-bold">✕</button>
       </div>
-      <input id="newName" required placeholder="Item Name (e.g. Basmati Rice 1kg)" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs" />
-      <div class="grid grid-cols-3 gap-2">
-        <input id="newUnit" required value="Pack" placeholder="Unit" class="border border-slate-300 rounded-xl px-3 py-2 text-xs" />
-        <input id="newPrice" type="number" required placeholder="Price ₹" class="border border-slate-300 rounded-xl px-3 py-2 text-xs" />
-        <select id="newGst" class="border border-slate-300 rounded-xl px-2 py-2 text-xs">
+      <div class="grid grid-cols-2 gap-3">
+        <input id="newSku" type="text" placeholder="SKU (e.g. SPM-07)" class="px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+        <input id="newCategory" type="text" placeholder="Category (e.g. Dairy)" class="px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+      </div>
+      <input id="newName" type="text" placeholder="Product Name (e.g. Nandini Ghee 500ml)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+      <div class="grid grid-cols-3 gap-3">
+        <input id="newPrice" type="number" placeholder="Price (₹)" class="px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+        <select id="newGst" class="px-3 py-2 rounded-xl border border-slate-200 text-xs">
           <option value="0">0% GST</option>
           <option value="5" selected>5% GST</option>
           <option value="12">12% GST</option>
           <option value="18">18% GST</option>
         </select>
+        <input id="newStock" type="number" placeholder="Initial Stock" class="px-3 py-2 rounded-xl border border-slate-200 text-xs" />
       </div>
-      <div class="grid grid-cols-2 gap-3">
-        <input id="newStock" type="number" required placeholder="Opening Stock" class="border border-slate-300 rounded-xl px-3 py-2 text-xs" />
-        <input id="newMinStock" type="number" required value="10" placeholder="Min Alert Limit" class="border border-slate-300 rounded-xl px-3 py-2 text-xs" />
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button type="button" onclick="closeAddItemModal()" class="px-4 py-2 text-xs font-semibold text-slate-500">Cancel</button>
-        <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Save to Shop</button>
-      </div>
-    </form>
-  </div>
-
-  <!-- AI Worker Assistant Drawer -->
-  <div id="helpChatDrawer" class="hidden fixed bottom-5 right-5 w-80 bg-slate-900 text-white border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-50">
-    <div class="bg-indigo-600 px-4 py-3 flex justify-between items-center">
-      <span class="font-bold text-xs">🤖 VyaparAI Worker Guide</span>
-      <button onclick="toggleHelpChat()" class="text-xs font-bold">✕</button>
-    </div>
-    <div id="chatMessages" class="p-3 h-56 overflow-y-auto space-y-2 text-xs">
-      <div class="bg-slate-800 p-2.5 rounded-xl">Namaste! Ask me how to bill customers, add shop items, or read LSTM stock predictions.</div>
-    </div>
-    <div class="p-2 border-t border-slate-800 flex gap-1.5">
-      <input id="chatInput" placeholder="Ask a question..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs" />
-      <button onclick="sendHelpMessage()" class="bg-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold">Send</button>
+      <button onclick="submitNewProduct()" class="w-full py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold">Save Item &amp; Initialize LSTM →</button>
     </div>
   </div>
 
+  <!-- ==================== GROQ LLM AI COPILOT MODAL ==================== -->
+  <div id="aiCopilotModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">🤖</div>
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900">VyaparPulse AI Copilot (Groq Llama-3.1-8B)</h3>
+            <p class="text-[11px] text-emerald-600 font-semibold">● Grounded in Live SQLite Stock &amp; PyTorch LSTM Forecasts</p>
+          </div>
+        </div>
+        <button onclick="closeAICopilotModal()" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+      </div>
+
+      <!-- Quick Prompt Chips -->
+      <div class="flex flex-wrap gap-1.5 my-3">
+        <button onclick="sendAIChatMessage('Which items will run out tomorrow and how much should I order?')" class="text-[11px] px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-semibold hover:bg-indigo-100">⚠️ Stockout &amp; Restock Plan</button>
+        <button onclick="sendAIChatMessage('Summarize today’s revenue, GST slabs, and top-selling items.')" class="text-[11px] px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100">📊 Revenue &amp; GST Summary</button>
+        <button onclick="sendAIChatMessage('How do I generate a GST bill at the POS terminal?')" class="text-[11px] px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200">🧾 Worker POS Guide</button>
+      </div>
+
+      <!-- Chat History -->
+      <div id="aiChatMessages" class="flex-1 overflow-y-auto space-y-2 p-3 rounded-2xl bg-slate-50 border border-slate-100 min-h-[220px] max-h-[340px]">
+        <div class="text-left">
+          <div class="inline-block bg-white border border-slate-200 text-slate-700 text-xs px-3.5 py-2.5 rounded-2xl shadow-sm">
+            Namaste! I am connected to your shop's live SQLite inventory and PyTorch LSTM demand predictions. Ask me anything about restocking, GST billing, or sales performance.
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Box -->
+      <div class="flex gap-2 mt-3">
+        <input id="aiChatInput" onkeydown="if(event.key==='Enter') sendAIChatMessage()" type="text" placeholder="Ask LLM about your shop stock, restock or GST..." class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs outline-none focus:border-indigo-500" />
+        <button onclick="sendAIChatMessage()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold">Ask AI →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
   <script>
-    const API_BASE = "";
     let currentOwner = null;
-    let productsCache = [];
-    let invoicesCache = [];
-    let cart = [];
-    let isMobileVerified = false;
-    let demandChart = null;
+    let isOtpVerified = false;
+    let shopProducts = [];
+    let posCart = [];
+    let lstmChartInstance = null;
 
-    const STARTER_PREVIEW = {
-      "Supermart": ["Aashirvaad Atta (5kg) — ₹245", "Sunpure Sunflower Oil (1L) — ₹135", "Tata Salt (1kg) — ₹28", "Surf Excel Matic (2kg) — ₹390", "Sona Masoori Rice (10kg) — ₹560"],
-      "Hotel": ["Masala Dosa — ₹80", "Filter Coffee — ₹30", "South Indian Meals — ₹130", "Paneer Butter Masala — ₹190", "Idli Vada Combo — ₹60"],
-      "General Store": ["Nandini Toned Milk (1L) — ₹54", "Parle-G Gold Biscuits — ₹25", "Colgate Strong Teeth — ₹115", "Classmate Notebook — ₹65", "Amul Butter (100g) — ₹58"]
+    const STARTER_PREVIEWS = {
+      "Supermart": [
+        "✓ Aashirvaad Atta (5kg) — ₹245",
+        "✓ Sunpure Sunflower Oil (1L) — ₹135",
+        "✓ Tata Salt (1kg) — ₹28",
+        "✓ Surf Excel Matic (2kg) — ₹390",
+        "✓ Sona Masoori Rice (10kg) — ₹560"
+      ],
+      "Hotel": [
+        "✓ Masala Dosa — ₹80",
+        "✓ Filter Coffee — ₹30",
+        "✓ South Indian Meals — ₹130",
+        "✓ Paneer Butter Masala — ₹190",
+        "✓ Idli Vada Combo — ₹60"
+      ],
+      "General Store": [
+        "✓ Nandini Toned Milk (1L) — ₹54",
+        "✓ Parle-G Gold Biscuits — ₹25",
+        "✓ Colgate Strong Teeth (200g) — ₹115",
+        "✓ Classmate Notebook (180pg) — ₹65",
+        "✓ Maggi 2-Minute Noodles — ₹14"
+      ]
     };
 
-    function updateStarterPreview(shopType) {
-      document.getElementById("previewShopBadge").innerText = shopType;
-      document.getElementById("starterPreviewList").innerHTML = STARTER_PREVIEW[shopType]
-        .map(item => `<li>✓ ${item}</li>`).join("");
+    function updateStarterPreview() {
+      const type = document.getElementById("regShopType").value;
+      document.getElementById("previewBadge").innerText = type;
+      document.getElementById("starterPreviewList").innerHTML = (STARTER_PREVIEWS[type] || STARTER_PREVIEWS["Supermart"])
+        .map(item => `<li>${item}</li>`).join("");
     }
-    updateStarterPreview("Supermart");
 
     function switchAuthTab(tab) {
-      document.getElementById("registerForm").classList.toggle("hidden", tab !== "register");
-      document.getElementById("loginForm").classList.toggle("hidden", tab !== "login");
-      document.getElementById("forgotForm").classList.toggle("hidden", tab !== "forgot");
-      document.getElementById("tabRegister").className = tab === "register" ? "flex-1 py-2.5 text-xs font-bold rounded-lg bg-indigo-600 text-white" : "flex-1 py-2.5 text-xs font-bold rounded-lg text-slate-400";
-      document.getElementById("tabLogin").className = (tab === "login" || tab === "forgot") ? "flex-1 py-2.5 text-xs font-bold rounded-lg bg-indigo-600 text-white" : "flex-1 py-2.5 text-xs font-bold rounded-lg text-slate-400";
+      const isReg = tab === "register";
+      document.getElementById("registerFormBox").classList.toggle("hidden", !isReg);
+      document.getElementById("loginFormBox").classList.toggle("hidden", isReg);
+      document.getElementById("tabRegisterBtn").className = isReg
+        ? "py-2.5 rounded-xl text-sm font-bold bg-indigo-600 text-white transition"
+        : "py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:text-white transition";
+      document.getElementById("tabLoginBtn").className = !isReg
+        ? "py-2.5 rounded-xl text-sm font-bold bg-indigo-600 text-white transition"
+        : "py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:text-white transition";
     }
 
-    async function requestOTP() {
+    async function sendOTP() {
       const mobile = document.getElementById("regMobile").value.trim();
-      if (mobile.length !== 10) return alert("Enter a valid 10-digit mobile number.");
-      const res = await fetch(`${API_BASE}/api/auth/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile })
-      });
-      const data = await res.json();
-      if (!res.ok) return alert(data.detail);
-      document.getElementById("otpVerifyBox").classList.remove("hidden");
-      document.getElementById("demoOtpHint").innerText = data.sms_delivered
-  ? `Real OTP SMS sent to +91 ${mobile}. Check your phone inbox.`
-  : `SMS Gateway Fallback • Demo OTP: ${data.demo_otp}`;
+      const errEl = document.getElementById("authErrorMsg");
+      errEl.classList.add("hidden");
+
+      if (mobile.length !== 10 || isNaN(mobile)) {
+        errEl.innerText = "Please enter a valid 10-digit Indian mobile number.";
+        errEl.classList.remove("hidden");
+        return;
+      }
+
+      const btn = document.getElementById("sendOtpBtn");
+      btn.innerText = "Sending...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/api/auth/send-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mobile })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Failed to send OTP");
+
+        const hintEl = document.getElementById("demoOtpHint");
+        hintEl.innerText = data.sms_delivered
+          ? `Real OTP SMS sent to +91 ${mobile}. Check your phone inbox.`
+          : `SMS Gateway Fallback • Demo OTP: ${data.demo_otp}`;
+        hintEl.classList.remove("hidden");
+        document.getElementById("otpVerifyRow").classList.remove("hidden");
+      } catch (e) {
+        errEl.innerText = e.message;
+        errEl.classList.remove("hidden");
+      } finally {
+        btn.innerText = "Resend OTP";
+        btn.disabled = false;
+      }
     }
 
-    async function confirmOTP() {
+    async function verifyOTP() {
       const mobile = document.getElementById("regMobile").value.trim();
       const otp = document.getElementById("regOtpInput").value.trim();
-      const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile, otp })
-      });
-      const data = await res.json();
-      if (!res.ok) return alert(data.detail);
+      const errEl = document.getElementById("authErrorMsg");
+      errEl.classList.add("hidden");
 
-      isMobileVerified = true;
-      document.getElementById("otpBadge").innerText = "Verified ✓";
-      document.getElementById("otpBadge").className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-      document.getElementById("otpVerifyBox").classList.add("hidden");
-      document.getElementById("regMobile").readOnly = true;
+      try {
+        const res = await fetch("/api/auth/verify-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mobile, otp })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Invalid OTP");
 
-      const btn = document.getElementById("registerSubmitBtn");
-      btn.disabled = false;
-      btn.innerText = "Complete Registration & Enter Dashboard →";
+        isOtpVerified = true;
+        const badge = document.getElementById("otpStatusBadge");
+        badge.innerText = "Verified ✓";
+        badge.className = "text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold";
+
+        const createBtn = document.getElementById("createAccountBtn");
+        createBtn.disabled = false;
+        createBtn.innerText = "Create Owner Account & Enter Dashboard →";
+        createBtn.className = "w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm cursor-pointer transition";
+      } catch (e) {
+        errEl.innerText = e.message;
+        errEl.classList.remove("hidden");
+      }
     }
 
-    async function handleRegister(e) {
-      e.preventDefault();
-      if (!isMobileVerified) return alert("Verify mobile OTP first.");
-      const res = await fetch(`${API_BASE}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          full_name: document.getElementById("regName").value,
-          business_name: document.getElementById("regBizName").value,
-          business_type: document.getElementById("regShopType").value,
-          email: document.getElementById("regEmail").value,
-          mobile: document.getElementById("regMobile").value,
-          password: document.getElementById("regPassword").value
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) return alert(data.detail);
-      enterDashboard(data.owner);
+    async function registerOwner() {
+      if (!isOtpVerified) return;
+      const errEl = document.getElementById("authErrorMsg");
+      errEl.classList.add("hidden");
+
+      const payload = {
+        full_name: document.getElementById("regName").value.trim(),
+        business_name: document.getElementById("regShopName").value.trim(),
+        business_type: document.getElementById("regShopType").value,
+        email: document.getElementById("regEmail").value.trim(),
+        mobile: document.getElementById("regMobile").value.trim(),
+        password: document.getElementById("regPassword").value
+      };
+
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Registration failed");
+        enterDashboard(data.owner);
+      } catch (e) {
+        errEl.innerText = e.message;
+        errEl.classList.remove("hidden");
+      }
     }
 
-    async function handleLogin(e) {
-      e.preventDefault();
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: document.getElementById("loginEmail").value,
-          password: document.getElementById("loginPassword").value
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) return alert(data.detail);
-      enterDashboard(data.owner);
+    async function loginOwner() {
+      const errEl = document.getElementById("loginErrorMsg");
+      errEl.classList.add("hidden");
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: document.getElementById("loginEmail").value.trim(),
+            password: document.getElementById("loginPassword").value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Invalid credentials");
+        enterDashboard(data.owner);
+      } catch (e) {
+        errEl.innerText = e.message;
+        errEl.classList.remove("hidden");
+      }
     }
 
-    async function requestForgotOTP() {
-      const mobile = document.getElementById("fpMobile").value.trim();
-      if (mobile.length !== 10) return alert("Enter your registered 10-digit mobile number.");
-
-      const res = await fetch(`${API_BASE}/api/auth/forgot-password/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile })
-      });
-      const data = await res.json();
-      if (!res.ok) return alert(data.detail);
-
-      document.getElementById("fpOtpBox").classList.remove("hidden");
-      document.getElementById("fpDemoHint").innerText = `Account (${data.email}) • Reset OTP: ${data.demo_otp}`;
-      document.getElementById("fpSubmitBtn").disabled = false;
-    }
-
-    async function handleResetPassword(e) {
-      e.preventDefault();
-      const res = await fetch(`${API_BASE}/api/auth/forgot-password/reset`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mobile: document.getElementById("fpMobile").value.trim(),
-          otp: document.getElementById("fpOtpInput").value.trim(),
-          new_password: document.getElementById("fpNewPassword").value
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) return alert(data.detail);
-
-      alert("Password updated successfully! You can now sign in with your new password.");
-      document.getElementById("loginEmail").value = data.email;
-      switchAuthTab("login");
-    }
-
-    function quickDemo(shopType) {
+    function quickDemoLogin(businessType) {
       enterDashboard({
         full_name: "Shreyas T Meti",
-        business_name: `Sri Annapurna ${shopType}`,
-        business_type: shopType,
+        business_name: `VyaparPulse Demo ${businessType}`,
+        business_type: businessType,
         email: "demo@vyaparpulse.in",
-        mobile: "9876543210"
+        mobile: "8310804425"
       });
     }
 
-    async function enterDashboard(owner) {
+    function enterDashboard(owner) {
       currentOwner = owner;
       document.getElementById("authScreen").classList.add("hidden");
-      document.getElementById("dashboardScreen").classList.remove("hidden");
-      document.getElementById("sideBizName").innerText = owner.business_name;
-      document.getElementById("sideOwnerMeta").innerText = `${owner.full_name} • +91 ${owner.mobile} ✓`;
-      document.getElementById("hdrShopTypeBadge").innerText = owner.business_type;
-      await refreshDashboard();
+      document.getElementById("appScreen").classList.remove("hidden");
+      document.getElementById("sidebarShopName").innerText = owner.business_name;
+      document.getElementById("sidebarOwnerMeta").innerText = `${owner.full_name} • +91 ${owner.mobile} ✓`;
+      document.getElementById("headerShopBadge").innerText = owner.business_type;
+      loadDashboardData();
     }
 
-    function switchTab(tab) {
-      ["overview", "pos", "inventory", "reports"].forEach(t => {
-        document.getElementById(`tab-${t}`).classList.toggle("hidden", t !== tab);
-        document.getElementById(`nav-${t}`).className = t === tab
-          ? "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600 text-white"
-          : "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white";
+    function logoutOwner() {
+      currentOwner = null;
+      posCart = [];
+      document.getElementById("appScreen").classList.add("hidden");
+      document.getElementById("authScreen").classList.remove("hidden");
+    }
+
+    function switchMainView(view) {
+      ["dashboard", "pos", "inventory", "ledger"].forEach(v => {
+        document.getElementById(`view-${v}`).classList.toggle("hidden", v !== view);
+        const navBtn = document.getElementById(`nav-${v}`);
+        navBtn.className = v === view
+          ? "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold tab-active transition"
+          : "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-slate-900 hover:text-white transition";
       });
-      const titles = { overview: "Executive Dashboard", pos: "Billing & POS Terminal", inventory: "Inventory & PyTorch LSTM AI", reports: "Sales & GST Ledger" };
-      document.getElementById("pageTitle").innerText = titles[tab];
+      const titles = {
+        dashboard: "Executive Dashboard",
+        pos: "Billing & GST POS Terminal",
+        inventory: "Inventory & PyTorch LSTM AI",
+        ledger: "Sales & GST Tax Ledger"
+      };
+      document.getElementById("viewTitle").innerText = titles[view];
     }
 
-    async function refreshDashboard() {
-      const res = await fetch(`${API_BASE}/api/dashboard/${encodeURIComponent(currentOwner.business_type)}`);
+    async function loadDashboardData() {
+      if (!currentOwner) return;
+      const encodedType = encodeURIComponent(currentOwner.business_type);
+      const res = await fetch(`/api/dashboard/${encodedType}`);
       const data = await res.json();
-      productsCache = data.products;
-      invoicesCache = data.invoices;
 
+      shopProducts = data.products || [];
       document.getElementById("kpiRevenue").innerText = `₹${data.kpis.total_revenue.toLocaleString("en-IN")}`;
       document.getElementById("kpiInvoices").innerText = data.kpis.invoice_count;
-      document.getElementById("kpiInvValue").innerText = `₹${data.kpis.inventory_value.toLocaleString("en-IN")}`;
-      document.getElementById("kpiItemCount").innerText = `${productsCache.length} Active Shop Items`;
-      document.getElementById("kpiAlerts").innerText = data.kpis.low_stock_count;
+      document.getElementById("kpiInventoryVal").innerText = `₹${data.kpis.inventory_value.toLocaleString("en-IN")}`;
+      document.getElementById("kpiSkuCount").innerText = `${shopProducts.length} Active SKUs`;
+      document.getElementById("kpiLowStock").innerText = data.kpis.low_stock_count;
 
-      const lowItems = productsCache.filter(p => p.lstm_forecast.low_stock_alert || p.stock <= p.min_stock);
-      document.getElementById("restockWatchList").innerHTML = lowItems.length
-        ? lowItems.map(p => `
-            <div class="flex items-center justify-between p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs">
-              <div>
-                <div class="font-bold text-slate-900">${p.name}</div>
-                <div class="text-amber-800">${p.stock} ${p.unit} left • LSTM predicts ${p.lstm_forecast.predicted_tomorrow_units}/day (${p.lstm_forecast.estimated_days_until_stockout}d left)</div>
-              </div>
-              <button onclick="restockItem(${p.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1.5 rounded-lg">+10 Stock</button>
-            </div>
-          `).join("")
-        : `<div class="text-xs text-emerald-700 bg-emerald-50 p-3 rounded-xl border border-emerald-200">All shop items have healthy stock levels!</div>`;
+      renderChart(shopProducts);
+      renderRestockWatch(shopProducts);
+      renderInventoryTable(shopProducts);
+      renderPosProducts(shopProducts);
+      renderInvoices(data.invoices || []);
+    }
 
-      document.getElementById("recentInvoicesBody").innerHTML = invoicesCache.slice(0, 6).map(inv => `
+    function renderChart(products) {
+      const ctx = document.getElementById("lstmChart").getContext("2d");
+      if (lstmChartInstance) lstmChartInstance.destroy();
+
+      lstmChartInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: products.map(p => p.name.split("(")[0].trim()),
+          datasets: [
+            {
+              label: "Actual Shelf Stock",
+              data: products.map(p => p.stock),
+              backgroundColor: "#4f46e5",
+              borderRadius: 6
+            },
+            {
+              label: "LSTM Tomorrow Forecast",
+              data: products.map(p => p.lstm_forecast.predicted_tomorrow_units),
+              backgroundColor: "#10b981",
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "bottom" } }
+        }
+      });
+    }
+
+    function renderRestockWatch(products) {
+      const urgent = products.filter(p => p.lstm_forecast.low_stock_alert || p.stock <= p.min_stock);
+      const container = document.getElementById("priorityRestockList");
+      if (!urgent.length) {
+        container.innerHTML = `<div class="p-3 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-semibold">All SKUs have healthy stock buffers.</div>`;
+        return;
+      }
+      container.innerHTML = urgent.slice(0, 4).map(p => `
+        <div class="p-3 rounded-xl bg-amber-50/70 border border-amber-200 flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-slate-900">${p.name}</div>
+            <div class="text-[11px] text-amber-800">Stock: ${p.stock} ${p.unit} • ${p.lstm_forecast.estimated_days_until_stockout}d left</div>
+          </div>
+          <button onclick="restockItem(${p.id})" class="px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-[11px] font-bold">+10 Stock</button>
+        </div>
+      `).join("");
+    }
+
+    function renderInventoryTable(products) {
+      document.getElementById("inventoryMatrixBody").innerHTML = products.map(p => `
         <tr>
-          <td class="py-2.5 px-3 font-bold text-indigo-600">${inv.invoice_no}</td>
-          <td class="py-2.5 px-3">${inv.customer_name}</td>
-          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-slate-100 font-semibold">${inv.payment_mode}</span></td>
-          <td class="py-2.5 px-3">₹${inv.subtotal.toFixed(2)}</td>
-          <td class="py-2.5 px-3">₹${inv.gst_total.toFixed(2)}</td>
-          <td class="py-2.5 px-3 text-right font-extrabold">₹${inv.grand_total.toFixed(2)}</td>
+          <td class="py-3 font-mono text-slate-500">${p.sku}</td>
+          <td class="py-3 font-bold text-slate-900">${p.name}</td>
+          <td class="py-3">₹${p.price} <span class="text-slate-400">(${p.gst_rate}%)</span></td>
+          <td class="py-3 font-bold">${p.stock} ${p.unit}</td>
+          <td class="py-3 font-bold text-indigo-600">${p.lstm_forecast.predicted_tomorrow_units} ${p.unit}</td>
+          <td class="py-3 font-semibold text-amber-600">${p.lstm_forecast.estimated_days_until_stockout}d left (Order +${p.lstm_forecast.suggested_restock_units})</td>
+          <td class="py-3 text-right">
+            <button onclick="restockItem(${p.id})" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-indigo-600 text-white text-[11px] font-bold transition">+10 Stock</button>
+          </td>
         </tr>
       `).join("");
+    }
 
-      document.getElementById("fullInventoryBody").innerHTML = productsCache.map(p => {
-        const ai = p.lstm_forecast;
-        return `
-          <tr>
-            <td class="py-2.5 px-3 font-mono text-slate-500">${p.sku}</td>
-            <td class="py-2.5 px-3 font-bold">${p.name}</td>
-            <td class="py-2.5 px-3">₹${p.price} (${p.gst_rate}%)</td>
-            <td class="py-2.5 px-3 font-bold">${p.stock} ${p.unit}</td>
-            <td class="py-2.5 px-3 text-indigo-600 font-bold">${ai.predicted_tomorrow_units} ${p.unit}</td>
-            <td class="py-2.5 px-3">${ai.low_stock_alert ? `<span class="text-amber-600 font-bold">${ai.estimated_days_until_stockout}d left (Order +${ai.suggested_restock_units})</span>` : `<span class="text-emerald-600 font-semibold">${ai.estimated_days_until_stockout} days</span>`}</td>
-            <td class="py-2.5 px-3 text-right"><button onclick="restockItem(${p.id})" class="bg-slate-900 text-white px-2.5 py-1 rounded-lg font-semibold">+10 Stock</button></td>
-          </tr>
-        `;
-      }).join("");
-
-      document.getElementById("posProductGrid").innerHTML = productsCache.map(p => `
-        <div onclick="addToCart(${p.id})" class="cursor-pointer border border-slate-200 hover:border-indigo-500 rounded-xl p-3.5 transition flex justify-between items-center">
+    function renderPosProducts(products) {
+      document.getElementById("posProductGrid").innerHTML = products.map(p => `
+        <div onclick="addToCart(${p.id})" class="p-3.5 rounded-xl border border-slate-200 hover:border-indigo-500 cursor-pointer transition flex items-center justify-between">
           <div>
-            <div class="font-bold text-xs text-slate-900">${p.name}</div>
-            <div class="text-[11px] text-slate-500">${p.category} • ${p.stock} ${p.unit} left</div>
+            <div class="text-xs font-bold text-slate-900">${p.name}</div>
+            <div class="text-[11px] text-slate-500">₹${p.price} • GST ${p.gst_rate}% • Stock: ${p.stock}</div>
           </div>
-          <div class="text-right">
-            <div class="font-extrabold text-sm text-indigo-600">₹${p.price}</div>
-            <div class="text-[10px] text-slate-400">+${p.gst_rate}% GST</div>
-          </div>
+          <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold">+ Add</span>
         </div>
       `).join("");
-
-      document.getElementById("allInvoicesContainer").innerHTML = invoicesCache.map(inv => `
-        <div class="flex justify-between items-center p-3 border border-slate-200 rounded-xl">
-          <div><span class="font-bold text-indigo-600">${inv.invoice_no}</span> • ${inv.customer_name} (${inv.payment_mode})</div>
-          <div class="font-extrabold">₹${inv.grand_total.toFixed(2)}</div>
-        </div>
-      `).join("");
-
-      renderLSTMChart();
       renderCart();
     }
 
-    function renderLSTMChart() {
-      const ctx = document.getElementById("lstmDemandChart").getContext("2d");
-      if (demandChart) demandChart.destroy();
-      demandChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: productsCache.map(p => p.name.split(" ")[0]),
-          datasets: [
-            { label: "Current Stock", data: productsCache.map(p => p.stock), backgroundColor: "#4f46e5", borderRadius: 6 },
-            { label: "LSTM Predicted Tomorrow Demand", data: productsCache.map(p => p.lstm_forecast.predicted_tomorrow_units), backgroundColor: "#f59e0b", borderRadius: 6 }
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
-
     function addToCart(productId) {
-      const prod = productsCache.find(p => p.id === productId);
-      if (!prod || prod.stock <= 0) return alert("Out of stock!");
-      const existing = cart.find(c => c.product_id === productId);
+      const prod = shopProducts.find(p => p.id === productId);
+      if (!prod || prod.stock <= 0) return;
+      const existing = posCart.find(c => c.product_id === productId);
       if (existing) {
-        if (existing.qty + 1 > prod.stock) return alert("Exceeds available stock!");
-        existing.qty += 1;
+        if (existing.qty < prod.stock) existing.qty += 1;
       } else {
-        cart.push({ product_id: prod.id, name: prod.name, price: prod.price, gst_rate: prod.gst_rate, qty: 1 });
+        posCart.push({ product_id: productId, name: prod.name, price: prod.price, gst_rate: prod.gst_rate, qty: 1 });
       }
       renderCart();
     }
 
     function renderCart() {
-      if (!cart.length) {
-        document.getElementById("posCartList").innerHTML = `<div class="text-slate-400 text-center py-6">Click any item on the left to add to GST bill</div>`;
-        document.getElementById("posSubtotal").innerText = "₹0.00";
-        document.getElementById("posGst").innerText = "₹0.00";
-        document.getElementById("posGrandTotal").innerText = "₹0.00";
+      const container = document.getElementById("posCartItems");
+      if (!posCart.length) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Click items on the left to build a GST bill</p>`;
+        document.getElementById("cartSubtotal").innerText = "₹0.00";
+        document.getElementById("cartGst").innerText = "₹0.00";
+        document.getElementById("cartGrandTotal").innerText = "₹0.00";
         return;
       }
       let sub = 0, gst = 0;
-      document.getElementById("posCartList").innerHTML = cart.map((c, idx) => {
-        const lineSub = c.price * c.qty;
-        const lineGst = lineSub * (c.gst_rate / 100);
+      container.innerHTML = posCart.map((item, idx) => {
+        const lineSub = item.price * item.qty;
+        const lineGst = lineSub * (item.gst_rate / 100);
         sub += lineSub;
         gst += lineGst;
         return `
-          <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-            <div><span class="font-bold">${c.name}</span> × ${c.qty}</div>
-            <div class="font-bold">₹${(lineSub + lineGst).toFixed(2)} <button onclick="cart.splice(${idx},1);renderCart()" class="text-rose-500 ml-1.5">✕</button></div>
+          <div class="flex items-center justify-between text-xs bg-slate-50 p-2.5 rounded-xl">
+            <div>
+              <div class="font-bold text-slate-900">${item.name} × ${item.qty}</div>
+              <div class="text-[11px] text-slate-500">₹${lineSub.toFixed(2)} + ₹${lineGst.toFixed(2)} GST</div>
+            </div>
+            <button onclick="posCart.splice(${idx},1); renderCart();" class="text-rose-500 font-bold px-2">✕</button>
           </div>
         `;
       }).join("");
-      document.getElementById("posSubtotal").innerText = `₹${sub.toFixed(2)}`;
-      document.getElementById("posGst").innerText = `₹${gst.toFixed(2)}`;
-      document.getElementById("posGrandTotal").innerText = `₹${(sub + gst).toFixed(2)}`;
+      document.getElementById("cartSubtotal").innerText = `₹${sub.toFixed(2)}`;
+      document.getElementById("cartGst").innerText = `₹${gst.toFixed(2)}`;
+      document.getElementById("cartGrandTotal").innerText = `₹${(sub + gst).toFixed(2)}`;
     }
 
-    async function submitGSTBill() {
-      if (!cart.length) return alert("Add items to the bill first.");
-      const res = await fetch(`${API_BASE}/api/billing/create`, {
+    async function checkoutBill() {
+      if (!posCart.length) return;
+      const res = await fetch("/api/billing/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           business_type: currentOwner.business_type,
-          customer_name: document.getElementById("billCustomer").value || "Walk-in Customer",
-          payment_mode: document.getElementById("billPayMode").value,
-          items: cart.map(c => ({ product_id: c.product_id, qty: c.qty }))
+          customer_name: document.getElementById("posCustomer").value || "Walk-in Customer",
+          payment_mode: document.getElementById("posPayment").value,
+          items: posCart.map(c => ({ product_id: c.product_id, qty: c.qty }))
         })
       });
-      const data = await res.json();
-      if (!res.ok) return alert(data.detail);
-      alert(`GST Invoice ${data.invoice_no} Generated! Total: ₹${data.grand_total.toFixed(2)}`);
-      cart = [];
-      await refreshDashboard();
+      if (res.ok) {
+        posCart = [];
+        await loadDashboardData();
+        switchMainView("dashboard");
+      }
     }
 
-    async function restockItem(id) {
-      await fetch(`${API_BASE}/api/products/${id}/restock?qty=10`, { method: "POST" });
-      await refreshDashboard();
+    function renderInvoices(invoices) {
+      const rows = invoices.map(inv => `
+        <tr>
+          <td class="py-2.5 font-mono font-bold text-indigo-600">${inv.invoice_no}</td>
+          <td class="py-2.5 font-medium text-slate-800">${inv.customer_name}</td>
+          <td class="py-2.5"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold">${inv.payment_mode}</span></td>
+          <td class="py-2.5">₹${inv.subtotal.toFixed(2)}</td>
+          <td class="py-2.5">₹${inv.gst_total.toFixed(2)}</td>
+          <td class="py-2.5 text-right font-extrabold text-slate-900">₹${inv.grand_total.toFixed(2)}</td>
+        </tr>
+      `).join("");
+      document.getElementById("recentInvoicesBody").innerHTML = rows;
+      document.getElementById("fullLedgerBody").innerHTML = rows;
+    }
+
+    async function restockItem(productId) {
+      await fetch(`/api/products/${productId}/restock?qty=10`, { method: "POST" });
+      await loadDashboardData();
     }
 
     function openAddItemModal() { document.getElementById("addItemModal").classList.remove("hidden"); }
     function closeAddItemModal() { document.getElementById("addItemModal").classList.add("hidden"); }
 
-    async function submitNewProduct(e) {
-      e.preventDefault();
-      await fetch(`${API_BASE}/api/products`, {
+    async function submitNewProduct() {
+      const payload = {
+        business_type: currentOwner.business_type,
+        sku: document.getElementById("newSku").value.trim() || `SKU-${Date.now() % 1000}`,
+        name: document.getElementById("newName").value.trim(),
+        category: document.getElementById("newCategory").value.trim() || "General",
+        unit: "Unit",
+        price: parseFloat(document.getElementById("newPrice").value) || 50,
+        gst_rate: parseFloat(document.getElementById("newGst").value) || 5,
+        stock: parseInt(document.getElementById("newStock").value) || 15,
+        min_stock: 10
+      };
+      if (!payload.name) return;
+      await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          business_type: currentOwner.business_type,
-          sku: document.getElementById("newSku").value,
-          name: document.getElementById("newName").value,
-          category: document.getElementById("newCategory").value,
-          unit: document.getElementById("newUnit").value,
-          price: parseFloat(document.getElementById("newPrice").value),
-          gst_rate: parseFloat(document.getElementById("newGst").value),
-          stock: parseInt(document.getElementById("newStock").value),
-          min_stock: parseInt(document.getElementById("newMinStock").value)
-        })
+        body: JSON.stringify(payload)
       });
       closeAddItemModal();
-      await refreshDashboard();
+      await loadDashboardData();
     }
 
-    function toggleHelpChat() { document.getElementById("helpChatDrawer").classList.toggle("hidden"); }
-    function sendHelpMessage() {
-      const inp = document.getElementById("chatInput");
-      const q = inp.value.trim();
-      if (!q) return;
-      const box = document.getElementById("chatMessages");
-      box.innerHTML += `<div class="bg-indigo-600/30 p-2 rounded-xl text-right">${q}</div>`;
-      let reply = "Click '+ Add Item to Shop' to add products, or open 'Billing & POS Terminal' to create GST bills.";
-      if (q.toLowerCase().includes("lstm") || q.toLowerCase().includes("stock")) {
-        reply = "The PyTorch LSTM model analyzes the past 7 days of item sales to predict tomorrow's unit demand and highlight items running low.";
+    function openAICopilotModal() { document.getElementById("aiCopilotModal").classList.remove("hidden"); }
+    function closeAICopilotModal() { document.getElementById("aiCopilotModal").classList.add("hidden"); }
+
+    async function sendAIChatMessage(customPrompt = null) {
+      const inputEl = document.getElementById("aiChatInput");
+      const chatBox = document.getElementById("aiChatMessages");
+      const question = customPrompt || inputEl.value.trim();
+      if (!question) return;
+
+      inputEl.value = "";
+      chatBox.innerHTML += `
+        <div class="text-right">
+          <span class="inline-block bg-indigo-600 text-white text-xs px-3.5 py-2 rounded-2xl">${question}</span>
+        </div>`;
+
+      const loadingId = "ai-load-" + Date.now();
+      chatBox.innerHTML += `
+        <div id="${loadingId}" class="text-left">
+          <span class="inline-block bg-white border border-slate-200 text-slate-500 text-xs px-3.5 py-2 rounded-2xl">Analyzing live SQLite stock &amp; LSTM forecasts...</span>
+        </div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const res = await fetch("/api/ai/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            business_type: currentOwner?.business_type || "Supermart",
+            message: question
+          })
+        });
+        const data = await res.json();
+        const formatted = (data.reply || "No response").replace(/\n/g, "<br>");
+        document.getElementById(loadingId).innerHTML = `
+          <div class="inline-block bg-white border border-slate-200 text-slate-800 text-xs px-3.5 py-2.5 rounded-2xl shadow-sm max-w-md">
+            <div class="leading-relaxed">${formatted}</div>
+            <div class="text-[10px] text-indigo-600 font-bold mt-1.5">⚡ ${data.engine}</div>
+          </div>`;
+      } catch (e) {
+        document.getElementById(loadingId).innerHTML = `
+          <span class="inline-block bg-rose-50 text-rose-600 text-xs px-3.5 py-2 rounded-2xl">Could not reach AI Copilot. Please try again.</span>`;
       }
-      box.innerHTML += `<div class="bg-slate-800 p-2.5 rounded-xl">${reply}</div>`;
-      inp.value = "";
-      box.scrollTop = box.scrollHeight;
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
   </script>
 </body>
